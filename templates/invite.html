@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('invite.page_title') }}</title>
+    <style>
+        :root {
+            --primary:#7c3aed;
+            --primary-dark:#6d28d9;
+            --card:rgba(255,255,255,0.94);
+            --text:#374151;
+            --soft:#f5f3ff;
+            --border:#ddd6fe;
+            /* per-theme character knobs (overridden below) */
+            --display:"Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+            --body:system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            --ornament:"\2766";          /* ❦ */
+            --card-radius:22px;
+            --card-border:1px solid transparent;
+            --card-shadow:0 10px 30px rgba(0,0,0,0.18);
+            --head-spacing:normal;
+            --head-transform:none;
+            --head-weight:600;
+        }
+        body {
+            font-family: var(--body);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color:var(--text);
+            background:
+                linear-gradient(rgba(253,242,248,0.78), rgba(245,243,255,0.86))
+                {% if settings.background_image %}, url("{{ url_for('static', filename='uploads/' ~ settings.background_image) }}"){% endif %};
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        /* ---- Theme COLOURS (kept as before) ---- */
+        body.template-classic { --primary:#b45309; --primary-dark:#92400e; --soft:#fffbeb; --border:#fde68a; }
+        body.template-minimal { --primary:#111827; --primary-dark:#000; --soft:#f9fafb; --border:#e5e7eb; background:#f9fafb; }
+        body.template-floral { --primary:#be185d; --primary-dark:#9d174d; --soft:#fdf2f8; --border:#fbcfe8; }
+        body.template-luxury { --primary:#f59e0b; --primary-dark:#d97706; --card:rgba(17,24,39,0.94); --text:#f9fafb; --soft:#1f2937; --border:#92400e; background:#111827; }
+        body.template-photo { --primary:#ffffff; --primary-dark:#f3f4f6; --card:rgba(0,0,0,0.54); --text:#ffffff; --soft:rgba(255,255,255,0.12); --border:rgba(255,255,255,0.28); }
+
+        /* ---- Theme CHARACTER (typography / ornament / shape) ---- */
+        body.template-romantic { --display:"Palatino Linotype", Palatino, Georgia, serif; --ornament:"\2665"; --card-radius:24px; }                                  /* ♥ soft & rounded */
+        body.template-classic  { --display:"Times New Roman", Georgia, serif; --ornament:"\2766"; --head-spacing:.14em; --head-transform:uppercase; --card-radius:4px; --card-border:1px solid var(--primary); } /* ❦ formal */
+        body.template-minimal  { --display:system-ui,-apple-system,"Segoe UI",sans-serif; --body:system-ui,-apple-system,"Segoe UI",sans-serif; --ornament:""; --head-spacing:.02em; --head-weight:500; --card-radius:2px; --card-shadow:none; --card-border:1px solid var(--border); } /* bare & airy */
+        body.template-floral   { --display:"Palatino Linotype", Palatino, Georgia, serif; --ornament:"\2740"; --card-radius:28px; }                                  /* ❀ */
+        body.template-luxury   { --display:"Didot","Bodoni MT","Times New Roman",Georgia,serif; --ornament:"\2726"; --head-spacing:.22em; --head-transform:uppercase; --card-radius:6px; --card-border:1px solid var(--primary); --card-shadow:0 18px 50px rgba(0,0,0,0.5); } /* ✦ gilded */
+        body.template-photo    { --display:system-ui,-apple-system,"Segoe UI",sans-serif; --ornament:""; --card-radius:18px; }
+
+        /* Faint, tileable emoji pattern layer (sits over the background, under the card) */
+        .invite-pattern { position: fixed; inset: 0; z-index: -1; pointer-events: none; background-repeat: repeat; background-size: 104px 104px; }
+        .page { max-width: 820px; margin: 0 auto; position: relative; }
+        .card { background:var(--card); border-radius:var(--card-radius); border:var(--card-border); padding:34px 30px; box-shadow:var(--card-shadow); margin-top:30px; backdrop-filter: blur(4px); }
+        h1, h2 { color:var(--primary); text-align:center; font-family:var(--display); letter-spacing:var(--head-spacing); text-transform:var(--head-transform); font-weight:var(--head-weight); }
+        h1 { font-size:2.2rem; margin:0 0 .15em; }
+        /* ornamental divider under the couple's names (empty for minimal/photo) */
+        h1::after { content:var(--ornament); display:block; color:var(--primary); opacity:.65; font-size:1.05rem; letter-spacing:.5em; margin:.4em 0 0 .5em; }
+        .subtitle { text-align:center; color:inherit; opacity:.86; font-size:16px; line-height:1.5; }
+        .info { background:var(--soft); border:1px solid var(--border); border-radius:12px; padding:16px; margin:20px 0; }
+        .info p { margin:8px 0; }
+        label { font-weight:bold; display:block; margin-top:14px; }
+        select, textarea { width:100%; padding:10px; margin-top:6px; border:1px solid #e5e7eb; border-radius:8px; box-sizing:border-box; }
+        textarea { min-height: 80px; resize: vertical; }
+        .choices { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:12px 0; }
+        .choice { border:1px solid var(--border); border-radius:12px; padding:12px; background:var(--soft); }
+        .choice input { margin-right:8px; }
+        button { width:100%; background:var(--primary); color:white; border:none; border-radius:10px; padding:13px 18px; margin-top:20px; font-size:16px; font-weight:bold; cursor:pointer; }
+        button:hover { background:var(--primary-dark); }
+        a.map { display:inline-block; color:var(--primary); font-weight:bold; margin-top:6px; }
+        .hint { color:inherit; opacity:.72; font-size:13px; line-height:1.4; }
+        .countdown { text-align:center; background:var(--soft); border:1px solid var(--border); border-radius:16px; padding:14px; margin:18px 0; }
+        .countdown span { display:block; color:var(--primary); font-size:36px; font-weight:bold; }
+        .iban-box { background:var(--soft); border:1px solid var(--border); border-radius:14px; padding:16px; margin:20px 0; text-align:center; }
+        .iban-text { font-family: monospace; font-size:16px; word-break: break-all; background:rgba(255,255,255,.78); color:#111827; border:1px dashed #cbd5e1; border-radius:10px; padding:10px; margin:10px 0; }
+        .qr { margin: 10px auto; max-width: 190px; border-radius:10px; display:block; background:white; padding:6px; }
+        .copy-btn { width:auto; margin-top:8px; padding:10px 14px; font-size:14px; }
+        .location-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .location-card { background:var(--soft); color:var(--text); border:1px solid var(--border); border-radius:12px; padding:14px; }
+        .preview-banner { background:#fff7ed; color:#9a3412; border:1px solid #fed7aa; padding:12px 16px; border-radius:12px; text-align:center; font-weight:bold; margin-bottom:16px; }
+        @media(max-width: 650px) { .choices, .location-grid { grid-template-columns:1fr; } .card { padding:20px; } body { padding:12px; } }
+    </style>
+
+    {% include 'partials/pwa_head.html' %}
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+</head>
+{# Custom invitation maker: preview overrides win, then saved settings, then the preset defaults. #}
+{% set _tmpl = (preview_template|default(none)) or settings.invite_template or 'romantic' %}
+{% set _fkey = (preview_font|default(none)) or settings.invite_font %}
+{% set _fcolor = (preview_color|default(none)) or settings.invite_color %}
+{% set _fbg = (preview_bg|default(none)) or settings.invite_bg %}
+{% set _fbg2 = (preview_bg2|default(none)) or settings.invite_bg2 %}
+{% set _ftext = (preview_text|default(none)) or settings.invite_text_color %}
+{% set _femoji = (preview_emoji|default(none)) or settings.invite_emoji %}
+{% set _patop = preview_pattern|default(none) %}
+{% set _patop = _patop if _patop is not none else (settings.invite_pattern_opacity or 0) %}
+{% set _fstack = invite_fonts.get(_fkey) if _fkey else '' %}
+{# Any custom colour present -> guarantee a readable text colour so a dark preset's white never leaks. #}
+{% set _custom = _fcolor or _fbg or _ftext %}
+{% set _textval = _ftext or ('#3a3550' if _custom else '') %}
+{% set _bgbase = _fbg or '#ffffff' %}
+{% set _paturi = pattern_data_uri(_femoji) if (_femoji and _patop and _patop > 0) else '' %}
+<body class="template-{{ _tmpl }}" style="
+{%- if _fstack %} --display: {{ _fstack | safe }};{% endif %}
+{%- if _fcolor %} --primary: {{ _fcolor }}; --primary-dark: color-mix(in srgb, {{ _fcolor }} 80%, #000);{% endif %}
+{#- Inner surfaces are a wash of the TEXT colour over the background, so boxes always
+    stay in the same light/dark family as the theme and the text remains readable. #}
+{%- if _custom %} --text: {{ _textval }}; --card: color-mix(in srgb, {{ _textval }} 7%, {{ _bgbase }}); --soft: color-mix(in srgb, {{ _textval }} 13%, {{ _bgbase }}); --border: color-mix(in srgb, {{ _textval }} 30%, {{ _bgbase }});{% endif %}
+{%- if _femoji %} --ornament: '{{ _femoji }}';{% endif %}
+{%- if _fbg and not settings.background_image %} background: linear-gradient(160deg, {{ _fbg }}, {{ _fbg2 or 'color-mix(in srgb, ' ~ _fbg ~ ' 60%, #fff)' }}) fixed;{% endif %}
+">
+{% if _paturi %}<div class="invite-pattern" style="background-image: {{ _paturi | safe }}; opacity: {{ '%.2f' % (_patop / 100) }};"></div>{% endif %}
+    <div class="page">
+        <div class="card">
+            {% if preview %}
+                <div class="preview-banner">{{ t('invite.preview_banner') }}</div>
+            {% endif %}
+
+            <h1>💍 {{ settings.onoma_zeugariou or "Ο γάμος μας" }}</h1>
+            <p class="subtitle">{{ settings.minima or "Με χαρά σας προσκαλούμε στον γάμο μας!" }}</p>
+
+            {% if days_until is not none %}
+                <div class="countdown">
+                    {% if days_until > 0 %}
+                        <span>{{ days_until }}</span>
+                        {{ t('invite.countdown_days_until') }}
+                    {% elif days_until == 0 %}
+                        <span>{{ t('invite.countdown_today') }}</span>
+                        {{ t('invite.countdown_today_sub') }}
+                    {% else %}
+                        <span>{{ -days_until }}</span>
+                        {{ t('invite.countdown_days_since') }}
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <h2>{{ t('invite.dear') }} {{ k.onoma }}</h2>
+
+            <div class="info">
+                <p><strong>{{ t('invite.label_date') }}</strong> {{ settings.imerominia_gamou or t('invite.tbd') }}</p>
+                {% if settings.ora_gamou %}<p><strong>{{ t('invite.label_time') }}</strong> {{ settings.ora_gamou }}</p>{% endif %}
+                <p><strong>{{ t('invite.label_koumparoi') }}</strong> {{ settings.koumparoi or t('invite.tbd') }}</p>
+                {% if settings.oikogeneia_nyfis or settings.oikogeneia_gambrou %}
+                    <p><strong>{{ t('invite.label_families') }}</strong>
+                        {% if settings.oikogeneia_nyfis %}{{ settings.oikogeneia_nyfis }}{% endif %}
+                        {% if settings.oikogeneia_nyfis and settings.oikogeneia_gambrou %} & {% endif %}
+                        {% if settings.oikogeneia_gambrou %}{{ settings.oikogeneia_gambrou }}{% endif %}
+                    </p>
+                {% endif %}
+                {% if settings.rsvp_deadline %}
+                    <p><strong>{{ t('invite.label_deadline') }}</strong> {{ settings.rsvp_deadline }}</p>
+                {% endif %}
+            </div>
+
+            <div class="location-grid">
+                <div class="location-card">
+                    <h2>{{ t('invite.ceremony_title') }}</h2>
+                    <p><strong>{{ t('invite.label_venue') }}</strong> {{ settings.ceremony_name or settings.topothesia or t('invite.tbd') }}</p>
+                    {% if settings.ceremony_time %}<p><strong>{{ t('invite.label_hour') }}</strong> {{ settings.ceremony_time }}</p>{% endif %}
+                    {% if settings.ceremony_address %}<p><strong>{{ t('invite.label_address') }}</strong> {{ settings.ceremony_address }}</p>{% endif %}
+                    {% if settings.ceremony_maps_link or settings.maps_link %}
+                        <a class="map" href="{{ settings.ceremony_maps_link or settings.maps_link }}" target="_blank">{{ t('invite.map_ceremony') }}</a>
+                    {% endif %}
+                </div>
+                <div class="location-card">
+                    <h2>{{ t('invite.reception_title') }}</h2>
+                    <p><strong>{{ t('invite.label_venue') }}</strong> {{ settings.reception_name or t('invite.tbd') }}</p>
+                    {% if settings.reception_time %}<p><strong>{{ t('invite.label_hour') }}</strong> {{ settings.reception_time }}</p>{% endif %}
+                    {% if settings.reception_address %}<p><strong>{{ t('invite.label_address') }}</strong> {{ settings.reception_address }}</p>{% endif %}
+                    {% if settings.reception_maps_link %}
+                        <a class="map" href="{{ settings.reception_maps_link }}" target="_blank">{{ t('invite.map_reception') }}</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if settings.iban %}
+                <div class="iban-box">
+                    <h2>{{ t('invite.iban_title') }}</h2>
+                    {% if settings.iban_owner %}<p><strong>{{ t('invite.iban_owner_label') }}</strong> {{ settings.iban_owner }}</p>{% endif %}
+                    {% if settings.bank_name %}<p><strong>{{ t('invite.iban_bank_label') }}</strong> {{ settings.bank_name }}</p>{% endif %}
+                    <div class="iban-text" id="ibanText">{{ settings.iban }}</div>
+                    <img class="qr" src="https://api.qrserver.com/v1/create-qr-code/?size=190x190&data={{ settings.iban|urlencode }}" alt="QR code IBAN">
+                    <button type="button" class="copy-btn" onclick="copyIban()">{{ t('invite.iban_copy_btn') }}</button>
+                    <p class="hint">{{ t('invite.iban_qr_hint') }}</p>
+                </div>
+            {% endif %}
+
+            {% if not preview %}
+                <form method="POST">
+                    <label>{{ t('invite.rsvp_question') }}</label>
+                    <div class="choices">
+                        <label class="choice"><input type="radio" name="rsvp" value="yes" {% if k.rsvp == 'Έρχεται' %}checked{% endif %} required> {{ t('invite.rsvp_yes') }}</label>
+                        <label class="choice"><input type="radio" name="rsvp" value="no" {% if k.rsvp == 'Δεν έρχεται' %}checked{% endif %} required> {{ t('invite.rsvp_no') }}</label>
+                    </div>
+
+                    <label>{{ t('invite.plus_one_question') }}</label>
+                    <select name="plus_one">
+                        <option value="0" {% if (k.plus_one or 0) == 0 %}selected{% endif %}>{{ t('invite.plus_one_0') }}</option>
+                        <option value="1" {% if (k.plus_one or 0) == 1 %}selected{% endif %}>{{ t('invite.plus_one_1') }}</option>
+                        <option value="2" {% if (k.plus_one or 0) == 2 %}selected{% endif %}>{{ t('invite.plus_one_2') }}</option>
+                    </select>
+                    <p class="hint">{{ t('invite.plus_one_hint') }}</p>
+
+                    <label>{{ t('invite.diet_label') }}</label>
+                    <select name="diatrofi" required>
+                        {% for d in diatrofi_options %}
+                            <option value="{{ d }}" {% if d == k.diatrofi %}selected{% endif %}>{{ te(d) }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <label>{{ t('invite.diet_notes_label') }}</label>
+                    <textarea name="diatrofi_sxolia" placeholder="{{ t('invite.diet_notes_ph') }}">{{ k.diatrofi_sxolia or '' }}</textarea>
+
+                    <button type="submit">{{ t('invite.submit_btn') }}</button>
+                </form>
+            {% endif %}
+        </div>
+        <footer style="text-align:center; margin-top:18px; font-size:13px; opacity:.72;">© {{ year }} Ceremonio · <a href="/privacy" style="color:inherit; text-decoration:underline;">{{ t('invite.privacy') }}</a></footer>
+    </div>
+
+    <script>
+        var _ibanCopied = {{ t('invite.iban_copied') | tojson }};
+        var _ibanCopyFail = {{ t('invite.iban_copy_fail') | tojson }};
+        function copyIban() {
+            const text = document.getElementById("ibanText").innerText.trim();
+            navigator.clipboard.writeText(text).then(function() {
+                alert(_ibanCopied);
+            }).catch(function() {
+                alert(_ibanCopyFail);
+            });
+        }
+    </script>
+</body>
+</html>

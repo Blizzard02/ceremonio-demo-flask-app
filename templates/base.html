@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{% block title %}Ceremonio{% endblock %}</title>
+    {% include 'partials/pwa_head.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+{% if logged_user %}
+{% set path = request.path %}
+<header class="appbar">
+    <a href="/" class="brand" id="brandInstall" title="{{ t('install.help') }}">
+        <span class="mark">{% include 'partials/logo.html' %}</span>
+        <span class="brand-name">Ceremonio<small class="brand-dl">⬇ DOWNLOAD</small></span>
+    </a>
+    <nav class="mainnav" id="mainnav">
+        <a href="/" class="navlink {{ 'active' if path == '/' }}">{{ t('nav.guests') }}</a>
+        <a href="/glenti" class="navlink {{ 'active' if path == '/glenti' }}">{{ t('nav.party') }}</a>
+        <a href="/oikonomika" class="navlink {{ 'active' if path == '/oikonomika' }}">{{ t('nav.finances') }}</a>
+        <a href="/analytics" class="navlink {{ 'active' if path == '/analytics' }}">{{ t('nav.analytics') }}</a>
+        <a href="/settings" class="navlink {{ 'active' if path == '/settings' }}">{{ t('nav.invite') }}</a>
+        <a href="/backup" class="navlink {{ 'active' if path == '/backup' }}">{{ t('nav.backup') }}</a>
+        <a href="/playlist" class="navlink {{ 'active' if path == '/playlist' }}">{{ t('nav.playlist') }}</a>
+        <a href="/logout" class="navlink danger">{{ t('nav.logout') }}</a>
+    </nav>
+    <div class="bar-right">
+        {% include 'partials/lang_switch.html' %}
+        <button type="button" class="navtoggle" aria-label="Menu" aria-controls="mainnav" aria-expanded="false">☰</button>
+    </div>
+</header>
+{% else %}
+{% block topright %}<div class="langs-float">{% include 'partials/lang_switch.html' %}</div>{% endblock %}
+{% endif %}
+
+<main class="container">
+    {% if is_guest_mode %}
+        <div class="banner-guest">{{ t('mode.guest_banner') }}</div>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <span>© {{ year }} Ceremonio. All rights reserved.</span>
+    <nav>
+        <a href="/terms">Terms of Service</a>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="mailto:ceremioteam@gmail.com">Contact</a>
+    </nav>
+</footer>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

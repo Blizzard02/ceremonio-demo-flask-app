@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('invite_expired.page_title') }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(180deg, #fdf2f8, #f5f3ff); padding:20px; max-width:700px; margin:0 auto; color:#374151; }
+        .card { background:white; border-radius:18px; padding:28px; box-shadow:0 10px 30px rgba(124,58,237,0.12); margin-top:40px; text-align:center; }
+        h1 { color:#7c3aed; }
+        p { line-height:1.6; }
+    </style>
+
+    {% include 'partials/pwa_head.html' %}
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+</head>
+<body>
+    <div class="card">
+        <h1>{{ t('invite_expired.heading') }}</h1>
+        <p>{{ t('invite_expired.body', name=k.onoma) }}</p>
+        <p>{{ t('invite_expired.contact') }}</p>
+        {% if settings.rsvp_deadline %}
+            <p><strong>{{ t('invite_expired.deadline_label') }}</strong> {{ settings.rsvp_deadline }}</p>
+        {% endif %}
+    </div>
+    <footer style="text-align:center; margin-top:18px; font-size:13px; color:#6b7280;">© {{ year }} Ceremonio · <a href="/privacy" style="color:inherit; text-decoration:underline;">{{ t('invite.privacy') }}</a></footer>
+</body>
+</html>

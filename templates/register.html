@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ t('register.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<div class="auth">
+    <a href="/" class="auth-home">← {{ t('auth.back_home') }}</a>
+    <a href="/" class="auth-logo reveal" aria-label="Ceremonio">{% include 'partials/logo.html' %}</a>
+    <h1 class="reveal" id="regTitle">{{ t('register.create_title') }}</h1>
+
+    <div class="seg reveal">
+        <button type="button" class="seg-btn active" data-mode="create">{{ t('register.mode_create') }}</button>
+        <button type="button" class="seg-btn" data-mode="connect">{{ t('register.mode_connect') }}</button>
+    </div>
+
+    <form method="POST" class="card reveal" id="regForm">
+        <div class="grid-2">
+            <div>
+                <label>{{ t('register.your_email') }}</label>
+                <input type="email" name="email" value="{{ suggested_email or '' }}" required placeholder="you@email.com">
+            </div>
+            <div>
+                <label>{{ t('register.your_password') }}</label>
+                <input type="password" name="password" required>
+            </div>
+        </div>
+
+        <div id="createFields">
+            <label>{{ t('register.wedding_title') }}</label>
+            <input type="text" name="wedding_title" placeholder="{{ t('register.wedding_title_ph') }}">
+
+            <label>{{ t('register.partner_email') }}</label>
+            <input type="email" name="partner_email" id="partnerEmail" placeholder="partner@email.com">
+        </div>
+
+        <p class="hint" id="regHint">{{ t('register.hint') }}</p>
+
+        <button type="submit" class="btn-block">{{ t('register.submit') }}</button>
+    </form>
+
+    <div class="card reveal">
+        <p class="hint" style="margin-bottom:0;">{{ t('register.have_account') }} <a href="/login">{{ t('register.login_link') }}</a></p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var T = {
+            createTitle: {{ t('register.create_title') | tojson }},
+            connectTitle: {{ t('register.connect_title') | tojson }},
+            createHint: {{ t('register.hint') | tojson }},
+            connectHint: {{ t('register.connect_hint') | tojson }}
+        };
+        var fields = document.getElementById("createFields");
+        var partner = document.getElementById("partnerEmail");
+        var title = document.getElementById("regTitle");
+        var hint = document.getElementById("regHint");
+
+        function setMode(mode) {
+            var create = (mode === "create");
+            fields.style.display = create ? "" : "none";
+            if (partner) {
+                partner.required = create;        // required only when creating a new wedding
+                if (!create) partner.value = "";  // ensure it's empty when joining
+            }
+            title.textContent = create ? T.createTitle : T.connectTitle;
+            hint.textContent = create ? T.createHint : T.connectHint;
+            document.querySelectorAll(".seg-btn").forEach(function (b) {
+                b.classList.toggle("active", b.dataset.mode === mode);
+            });
+        }
+
+        document.querySelectorAll(".seg-btn").forEach(function (b) {
+            b.addEventListener("click", function () { setMode(b.dataset.mode); });
+        });
+        setMode("create");
+    })();
+</script>
+{% endblock %}

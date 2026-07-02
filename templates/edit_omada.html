@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ t('edit.group_title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('edit.group_title') }}</h1>
+
+<form method="POST" class="card reveal">
+    <label>{{ t('group.name') }}</label>
+    <input type="text" name="onoma" value="{{ o.onoma }}" required>
+
+    <label>{{ t('group.side') }}</label>
+    <select name="pleura">
+        <option value="nyfis" {% if o.pleura == "nyfis" %}selected{% endif %}>{{ sides['nyfis'] }}</option>
+        <option value="gambrou" {% if o.pleura == "gambrou" %}selected{% endif %}>{{ sides['gambrou'] }}</option>
+    </select>
+
+    <button type="submit" class="btn-block">{{ t('edit.save') }}</button>
+</form>
+
+<p style="text-align:center;"><a href="/">← {{ t('edit.back') }}</a></p>
+{% endblock %}

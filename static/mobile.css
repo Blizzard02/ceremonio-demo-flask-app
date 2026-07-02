@@ -1,0 +1,6 @@
+/* Small-screen tweaks that complement app.css.
+   Most responsive behaviour now lives in app.css (app bar, hamburger, grids, tables). */
+@media (max-width: 760px) {
+  /* Prevent iOS Safari from auto-zooming when an input is focused */
+  input, select, textarea { font-size: 16px; }
+}

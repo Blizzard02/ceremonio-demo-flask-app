@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ t('login.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<div class="auth">
+    <a href="/" class="auth-home">← {{ t('auth.back_home') }}</a>
+    <a href="/" class="auth-logo reveal" aria-label="Ceremonio">{% include 'partials/logo.html' %}</a>
+    <h1 class="reveal">{{ t('login.title') }}</h1>
+
+    <form method="POST" class="card reveal">
+        <label>{{ t('login.email') }}</label>
+        <input type="email" name="email" required placeholder="you@email.com">
+        <label>{{ t('login.password') }}</label>
+        <input type="password" name="password" required>
+        <button type="submit" class="btn-block">{{ t('login.submit') }}</button>
+    </form>
+
+    <div class="card reveal" style="border-color:var(--warn-line); background:var(--warn-bg);">
+        <h3 style="margin-top:0; color:var(--warn);">{{ t('login.guest_title') }}</h3>
+        <p class="hint">{{ t('login.guest_hint') }}</p>
+        <a href="/guest"><button type="button" class="btn-warn btn-block">{{ t('login.guest_btn') }}</button></a>
+    </div>
+
+    <div class="card reveal">
+        <p class="hint">{{ t('login.register_hint') }}</p>
+        <p style="margin-bottom:0;"><a href="/register">{{ t('login.register_link') }}</a></p>
+    </div>
+</div>
+{% endblock %}

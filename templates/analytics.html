@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}{{ t('analytics.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">📊 {{ t('analytics.title') }}</h1>
+
+<!-- Summary stats -->
+<div class="stat-grid reveal">
+    <div class="stat"><b>{{ synolo_eggrafes }}</b><span>{{ t('analytics.guest_records') }}</span></div>
+    <div class="stat"><b>{{ synolo_atoma }}</b><span>{{ t('analytics.total_people') }}</span></div>
+    <div class="stat"><b>{{ synolo_paidia }}</b><span>{{ t('analytics.children') }}</span></div>
+    <div class="stat"><b>{{ prosklitiria }}</b><span>{{ t('analytics.invites_sent') }}</span></div>
+</div>
+<div class="stat-grid reveal" style="grid-template-columns:1fr 1fr;">
+    <div class="stat"><b>{{ apantisan }}</b><span>{{ t('analytics.rsvp_answered') }}</span></div>
+    <div class="stat"><b>{{ den_apantisan }}</b><span>{{ t('analytics.rsvp_pending') }}</span></div>
+</div>
+
+<!-- Breakdown panels -->
+<div class="grid-2 reveal">
+    <!-- Gender -->
+    <div class="card">
+        <h3>👤 {{ t('analytics.gender_title') }}</h3>
+        {% for label, value in fylo_counts.items() %}
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding:9px 0;">
+                <span>{{ te(label) }}</span>
+                <strong style="color:var(--violet-dark);">{{ value }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Side -->
+    <div class="card">
+        <h3>💗 {{ t('analytics.side_title') }}</h3>
+        {% for label, value in pleura_counts.items() %}
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding:9px 0;">
+                <span>{{ label }}</span>
+                <strong style="color:var(--violet-dark);">{{ value }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- RSVP -->
+    <div class="card">
+        <h3>✅ {{ t('analytics.rsvp_title') }}</h3>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding:9px 0;">
+            <span>{{ t('analytics.rsvp_answered') }}</span>
+            <strong style="color:var(--violet-dark);">{{ apantisan }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding:9px 0;">
+            <span>{{ t('analytics.rsvp_pending') }}</span>
+            <strong style="color:var(--violet-dark);">{{ den_apantisan }}</strong>
+        </div>
+        {% for label, value in rsvp_counts.items() %}
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding:9px 0;">
+                <span>{{ te(label) }}</span>
+                <strong style="color:var(--violet-dark);">{{ value }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Diet -->
+    <div class="card">
+        <h3>🥗 {{ t('analytics.diet_title') }}</h3>
+        {% for label, value in diatrofi_counts.items() %}
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding:9px 0;">
+                <span>{{ te(label) }}</span>
+                <strong style="color:var(--violet-dark);">{{ value }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Per-group breakdown table -->
+<h2 class="reveal">📋 {{ t('analytics.group_analysis') }}</h2>
+
+{% if omada_rows %}
+    <div class="table-wrap reveal">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('analytics.th_group') }}</th>
+                    <th>{{ t('analytics.th_side') }}</th>
+                    <th>{{ t('analytics.th_records') }}</th>
+                    <th>{{ t('analytics.th_total_people') }}</th>
+                    <th>{{ t('analytics.th_children') }}</th>
+                    <th>{{ t('analytics.th_invites') }}</th>
+                    <th>{{ t('analytics.th_answered') }}</th>
+                    <th>{{ t('analytics.th_coming') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in omada_rows %}
+                    <tr>
+                        <td>{{ row.onoma }}</td>
+                        <td>{{ row.pleura }}</td>
+                        <td>{{ row.eggrafes }}</td>
+                        <td>{{ row.atoma }}</td>
+                        <td>{{ row.paidia }}</td>
+                        <td>{{ row.prosklitiria }}</td>
+                        <td>{{ row.apantisan }}</td>
+                        <td>{{ row.erxontai }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="empty reveal">{{ t('analytics.empty') }}</p>
+{% endif %}
+{% endblock %}

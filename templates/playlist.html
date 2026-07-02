@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ t('playlist.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">🎵 {{ t('playlist.title') }}</h1>
+<p class="reveal"><a class="btn btn-ghost btn-sm" href="/export_playlist">⬇ {{ t('playlist.export_dj') }}</a></p>
+
+<!-- Add song form -->
+<div class="card reveal">
+    <h3>➕ {{ t('playlist.new_song_title') }}</h3>
+    <form action="/add_tragoudi" method="POST">
+        <div class="grid-2">
+            <div>
+                <label>{{ t('playlist.song_name') }}</label>
+                <input type="text" name="titlos" placeholder="{{ t('playlist.song_name_ph') }}" required>
+            </div>
+            <div>
+                <label>{{ t('playlist.artist') }}</label>
+                <input type="text" name="kallitechnis" placeholder="{{ t('playlist.artist_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('playlist.category') }}</label>
+                <select name="katigoria" required>
+                    {% for kat in katigories_mousikis %}
+                        <option value="{{ kat }}">{{ te(kat) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>{{ t('playlist.link') }}</label>
+                <input type="url" name="link" placeholder="{{ t('playlist.link_ph') }}">
+            </div>
+            <div style="grid-column: span 2;">
+                <label>{{ t('playlist.notes') }}</label>
+                <textarea name="sxolia" placeholder="{{ t('playlist.notes_ph') }}"></textarea>
+            </div>
+        </div>
+        <button type="submit">{{ t('playlist.add_btn') }}</button>
+    </form>
+</div>
+
+<!-- Songs grouped by category -->
+{% for kat, lista in tragoudia_ana_katigoria.items() %}
+    <div class="card reveal">
+        <h2>
+            {% if kat == "Είσοδος ζευγαριού" %}🚪
+            {% elif kat == "Πρώτος χορός" %}💃
+            {% elif kat == "Κοπή τούρτας" %}🍰
+            {% elif kat == "Πάρτι" %}🎉
+            {% elif kat == "Να μην παιχτούν" %}🚫
+            {% else %}🎵
+            {% endif %}
+            {{ te(kat) }}
+        </h2>
+
+        {% if lista %}
+            {% for song in lista %}
+                <div class="card" style="border-left: 5px solid {{ 'var(--bad)' if kat == 'Να μην παιχτούν' else 'var(--violet)' }}; margin-bottom: 12px;">
+                    <div style="font-weight:700; color:var(--violet-dark); font-size:1rem;">{{ song.titlos }}</div>
+                    <div style="color:var(--muted); font-size:.9rem; margin-top:4px;">
+                        {{ t('playlist.artist_label') }}: <strong>{{ song.kallitechnis or "—" }}</strong>
+                    </div>
+                    {% if song.link %}
+                        <div style="color:var(--muted); font-size:.9rem; margin-top:4px;">
+                            {{ t('playlist.link_label') }}:
+                            <a href="{{ song.link }}" target="_blank">{{ t('playlist.open_song') }}</a>
+                        </div>
+                    {% endif %}
+                    {% if song.sxolia %}
+                        <div style="color:var(--ink); font-size:.9rem; margin-top:8px;">
+                            {{ t('playlist.notes_label') }}: {{ song.sxolia }}
+                        </div>
+                    {% endif %}
+                    <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <a href="/edit_tragoudi/{{ song.id }}">
+                            <button class="btn-warn btn-sm">✏️ {{ t('playlist.edit_btn') }}</button>
+                        </a>
+                        <form action="/delete_tragoudi/{{ song.id }}" method="POST" onsubmit="return confirm(CONFIRM_SONG)" style="display:inline;">
+                            <button type="submit" class="btn-danger btn-sm">🗑️ {{ t('playlist.delete_btn') }}</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="empty">{{ t('playlist.empty_category') }}</p>
+        {% endif %}
+    </div>
+{% endfor %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CONFIRM_SONG = {{ t('playlist.confirm_delete') | tojson }};
+</script>
+{% endblock %}

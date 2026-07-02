@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ t('edit.expense_title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('edit.expense_title') }}</h1>
+
+<form method="POST" class="card reveal">
+    <label>{{ t('edit.description') }}</label>
+    <input type="text" name="perigrafi" value="{{ exodo.perigrafi }}" required>
+
+    <label>{{ t('edit.category') }}</label>
+    <select name="katigoria" required>
+        {% for k in katigories %}
+            <option value="{{ k }}" {% if k == exodo.katigoria %}selected{% endif %}>{{ te(k) }}</option>
+        {% endfor %}
+    </select>
+
+    <label>{{ t('edit.supplier') }}</label>
+    <input type="text" name="promithiefthis" value="{{ exodo.promithiefthis or '' }}">
+
+    <div class="grid-2">
+        <div>
+            <label>{{ t('edit.est_cost') }}</label>
+            <input type="number" step="0.01" name="ektimomeno_kostos" value="{{ exodo.ektimomeno_kostos or 0 }}">
+        </div>
+        <div>
+            <label>{{ t('edit.final_cost') }}</label>
+            <input type="number" step="0.01" name="teliko_kostos" value="{{ exodo.teliko_kostos or 0 }}">
+        </div>
+    </div>
+
+    <div class="grid-2">
+        <div>
+            <label>{{ t('edit.paid') }}</label>
+            <input type="number" step="0.01" name="plirothike" value="{{ exodo.plirothike or 0 }}">
+        </div>
+        <div>
+            <label>{{ t('edit.payment_date') }}</label>
+            <input type="date" name="imerominia_pliromis" value="{{ exodo.imerominia_pliromis or '' }}">
+        </div>
+    </div>
+
+    <label>{{ t('edit.notes') }}</label>
+    <textarea name="sxolia">{{ exodo.sxolia or '' }}</textarea>
+
+    <button type="submit" class="btn-block">{{ t('edit.save') }}</button>
+</form>
+
+<p style="text-align:center;"><a href="/oikonomika">← {{ t('edit.expense_back') }}</a></p>
+{% endblock %}

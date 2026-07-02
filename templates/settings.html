@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+{% block title %}{{ t('settings.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('settings.title') }}</h1>
+<p class="hint reveal">{{ t('settings.hint') }}</p>
+
+{% if days_until is not none %}
+    <div class="card reveal" style="text-align:center;">
+        {% if days_until > 0 %}
+            <span style="display:block; font-family:var(--serif); font-size:2.4rem; font-weight:700; color:var(--violet); line-height:1;">{{ days_until }}</span>
+            {{ t('settings.days_until') }}
+        {% elif days_until == 0 %}
+            <span style="display:block; font-family:var(--serif); font-size:2.4rem; font-weight:700; color:var(--violet); line-height:1;">{{ t('settings.today') }}</span>
+            {{ t('settings.today_sub') }}
+        {% else %}
+            <span style="display:block; font-family:var(--serif); font-size:2.4rem; font-weight:700; color:var(--violet); line-height:1;">{{ -days_until }}</span>
+            {{ t('settings.days_since') }}
+        {% endif %}
+    </div>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data" class="reveal">
+    <div class="card">
+        <label>{{ t('settings.couple_names') }}</label>
+        <input type="text" name="onoma_zeugariou" value="{{ settings.onoma_zeugariou or '' }}" placeholder="{{ t('settings.couple_names_ph') }}">
+
+        <div class="grid-2">
+            <div>
+                <label>{{ t('settings.wedding_date') }}</label>
+                <input type="date" name="imerominia_gamou" value="{{ settings.imerominia_gamou or '' }}">
+            </div>
+            <div>
+                <label>{{ t('settings.wedding_time') }}</label>
+                <input type="time" name="ora_gamou" value="{{ settings.ora_gamou or '' }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>{{ t('settings.section_ceremony') }}</h2>
+        <div class="grid-2">
+            <div>
+                <label>{{ t('settings.ceremony_name') }}</label>
+                <input type="text" name="ceremony_name" value="{{ settings.ceremony_name or '' }}" placeholder="{{ t('settings.ceremony_name_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('settings.ceremony_time') }}</label>
+                <input type="time" name="ceremony_time" value="{{ settings.ceremony_time or '' }}">
+            </div>
+            <div>
+                <label>{{ t('settings.ceremony_address') }}</label>
+                <input type="text" name="ceremony_address" value="{{ settings.ceremony_address or '' }}" placeholder="{{ t('settings.ceremony_address_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('settings.ceremony_maps') }}</label>
+                <input type="url" name="ceremony_maps_link" value="{{ settings.ceremony_maps_link or '' }}" placeholder="https://maps.google.com/...">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>{{ t('settings.section_reception') }}</h2>
+        <div class="grid-2">
+            <div>
+                <label>{{ t('settings.reception_name') }}</label>
+                <input type="text" name="reception_name" value="{{ settings.reception_name or '' }}" placeholder="{{ t('settings.reception_name_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('settings.reception_time') }}</label>
+                <input type="time" name="reception_time" value="{{ settings.reception_time or '' }}">
+            </div>
+            <div>
+                <label>{{ t('settings.reception_address') }}</label>
+                <input type="text" name="reception_address" value="{{ settings.reception_address or '' }}" placeholder="{{ t('settings.reception_address_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('settings.reception_maps') }}</label>
+                <input type="url" name="reception_maps_link" value="{{ settings.reception_maps_link or '' }}" placeholder="https://maps.google.com/...">
+            </div>
+        </div>
+    </div>
+
+    <div class="card maker">
+        <h2>{{ t('settings.section_appearance') }}</h2>
+        <p class="hint">{{ t('settings.maker_intro') }}</p>
+
+        <input type="hidden" name="invite_template" id="inviteTemplate" value="{{ settings.invite_template or 'romantic' }}">
+
+        <label>{{ t('settings.maker_presets') }}</label>
+        <div class="maker-presets">
+            {% for key in presets.keys() %}
+                <button type="button" class="preset-chip" data-preset="{{ key }}">{{ t('invite_preset.' ~ key) }}</button>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top:14px;">
+            <label>{{ t('settings.maker_font') }}</label>
+            <select name="invite_font" id="inviteFont">
+                {% for key in fonts.keys() %}
+                    <option value="{{ key }}" {% if (settings.invite_font or default_font) == key %}selected{% endif %}>{{ t('invite_font.' ~ key) }}</option>
+                {% endfor %}
+            </select>
+            <p class="hint" style="margin-top:6px;">{{ t('settings.maker_font_hint') }}</p>
+        </div>
+
+        <div class="maker-colors">
+            <div>
+                <label>{{ t('settings.maker_color') }}</label>
+                <input type="color" name="invite_color" id="inviteColor" value="{{ settings.invite_color or '#be3d7a' }}">
+            </div>
+            <div>
+                <label>{{ t('settings.maker_text') }}</label>
+                <input type="color" name="invite_text_color" id="inviteText" value="{{ settings.invite_text_color or '#3a3550' }}">
+            </div>
+            <div>
+                <label>{{ t('settings.maker_bg') }}</label>
+                <input type="color" name="invite_bg" id="inviteBg" value="{{ settings.invite_bg or '#fdf2f8' }}">
+            </div>
+            <div>
+                <label class="check-label"><input type="checkbox" name="invite_gradient" id="inviteGradient" {% if settings.invite_bg2 %}checked{% endif %}> {{ t('settings.maker_gradient') }}</label>
+                <input type="color" name="invite_bg2" id="inviteBg2" value="{{ settings.invite_bg2 or '#f7d4e6' }}">
+            </div>
+        </div>
+
+        <label style="margin-top:18px;">{{ t('settings.maker_emoji') }}</label>
+        <p class="hint" style="margin-top:0;">{{ t('settings.maker_emoji_hint') }}</p>
+        <input type="hidden" name="invite_emoji" id="inviteEmoji" value="{{ settings.invite_emoji or '' }}">
+        <div class="emoji-grid">
+            <button type="button" class="emoji-chip emoji-none" data-emoji="">✕</button>
+            {% for em in emojis %}
+                <button type="button" class="emoji-chip" data-emoji="{{ em }}">{{ em }}</button>
+            {% endfor %}
+        </div>
+
+        <div style="margin-top:16px;">
+            <label class="check-label" style="margin-bottom:6px;">{{ t('settings.maker_pattern') }}: <strong id="patVal">{{ settings.invite_pattern_opacity or 0 }}</strong></label>
+            <input type="range" name="invite_pattern_opacity" id="invitePattern" min="0" max="30" step="1" value="{{ settings.invite_pattern_opacity or 0 }}" style="width:100%;">
+            <p class="hint" style="margin-top:6px;">{{ t('settings.maker_pattern_hint') }}</p>
+        </div>
+
+        <label style="margin-top:18px;">{{ t('settings.maker_live') }}</label>
+        <div class="maker-preview" id="makerPreview">
+            <div class="mp-pattern" id="mpPattern"></div>
+            <div class="mp-card">
+                <div class="mp-name">💍 {{ settings.onoma_zeugariou or t('settings.maker_sample_names') }}</div>
+                <div class="mp-orn" id="mpOrn">&#10086;</div>
+                <div class="mp-sub">{{ t('settings.maker_sample_sub') }}</div>
+                <div class="mp-info">📅 {{ t('settings.maker_sample_date') }} &nbsp;·&nbsp; 📍 {{ t('settings.maker_sample_place') }}</div>
+                <span class="mp-btn">{{ t('settings.maker_sample_btn') }}</span>
+            </div>
+        </div>
+
+        <div style="margin-top:16px;">
+            <a id="previewBtn" class="btn btn-ghost" href="/invite_preview" target="_blank">{{ t('settings.preview_btn') }}</a>
+            <p class="hint" style="margin-top:8px;">{{ t('settings.maker_preview_hint') }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>{{ t('settings.section_sides') }}</h2>
+        <div class="grid-2">
+            <div><label>{{ t('settings.side_nyfis_label') }}</label>
+                <input type="text" name="side_nyfis" value="{{ settings.side_nyfis or '' }}" placeholder="{{ t('side.bride_label') }}"></div>
+            <div><label>{{ t('settings.side_gambrou_label') }}</label>
+                <input type="text" name="side_gambrou" value="{{ settings.side_gambrou or '' }}" placeholder="{{ t('side.groom_label') }}"></div>
+        </div>
+        <p class="hint">{{ t('settings.sides_hint') }}</p>
+    </div>
+
+    <div class="card">
+        <h2>{{ t('settings.section_family') }}</h2>
+        <div class="grid-2">
+            <div>
+                <label>{{ t('settings.koumparoi') }}</label>
+                <input type="text" name="koumparoi" value="{{ settings.koumparoi or '' }}" placeholder="{{ t('settings.koumparoi_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('settings.rsvp_deadline') }}</label>
+                <input type="date" name="rsvp_deadline" value="{{ settings.rsvp_deadline or '' }}">
+            </div>
+            <div>
+                <label>{{ t('settings.family_label', side=sides['nyfis']) }}</label>
+                <input type="text" name="oikogeneia_nyfis" value="{{ settings.oikogeneia_nyfis or '' }}" placeholder="{{ t('settings.family_bride_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('settings.family_label', side=sides['gambrou']) }}</label>
+                <input type="text" name="oikogeneia_gambrou" value="{{ settings.oikogeneia_gambrou or '' }}" placeholder="{{ t('settings.family_groom_ph') }}">
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>{{ t('settings.section_iban') }}</h2>
+        <div class="grid-2">
+            <div>
+                <label>{{ t('settings.iban_owner') }}</label>
+                <input type="text" name="iban_owner" value="{{ settings.iban_owner or '' }}" placeholder="{{ t('settings.iban_owner_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('settings.bank_name') }}</label>
+                <input type="text" name="bank_name" value="{{ settings.bank_name or '' }}" placeholder="{{ t('settings.bank_name_ph') }}">
+            </div>
+        </div>
+        <label>{{ t('settings.iban') }}</label>
+        <input type="text" name="iban" value="{{ settings.iban or '' }}" placeholder="{{ t('settings.iban_ph') }}">
+        <p class="hint">{{ t('settings.iban_hint') }}</p>
+    </div>
+
+    <div class="card">
+        <h2>{{ t('settings.section_image') }}</h2>
+        <label>{{ t('settings.bg_image') }}</label>
+        <input type="file" name="background_image" accept="image/*">
+        {% if settings.background_image %}
+            <div style="background:var(--violet-soft); border:1px solid var(--line); border-radius:var(--r-sm); padding:12px; margin-bottom:14px;">
+                <strong>{{ t('settings.current_image') }}</strong>
+                <img src="{{ url_for('static', filename='uploads/' ~ settings.background_image) }}" alt="{{ t('settings.bg_image') }}" style="max-width:100%; border-radius:var(--r-sm); display:block; margin-top:8px;">
+            </div>
+        {% endif %}
+        <label>{{ t('settings.message') }}</label>
+        <textarea name="minima">{{ settings.minima or '' }}</textarea>
+
+        <!-- Legacy fields kept hidden for compatibility with older backups -->
+        <input type="hidden" name="topothesia" value="{{ settings.topothesia or '' }}">
+        <input type="hidden" name="maps_link" value="{{ settings.maps_link or '' }}">
+    </div>
+
+    <p class="hint">{{ t('settings.rsvp_hint') }}</p>
+    <button type="submit">{{ t('settings.save_btn') }}</button>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ---- Custom invitation maker: live, in-page preview ----
+    (function () {
+        var FONTS   = {{ fonts | tojson }};
+        var PRESETS = {{ presets | tojson }};
+
+        var fontSel  = document.getElementById("inviteFont");
+        var colorIn  = document.getElementById("inviteColor");
+        var textIn   = document.getElementById("inviteText");
+        var bgIn     = document.getElementById("inviteBg");
+        var bg2In    = document.getElementById("inviteBg2");
+        var gradChk  = document.getElementById("inviteGradient");
+        var emojiIn  = document.getElementById("inviteEmoji");
+        var patIn    = document.getElementById("invitePattern");
+        var patVal   = document.getElementById("patVal");
+        var tmplIn   = document.getElementById("inviteTemplate");
+        var preview  = document.getElementById("makerPreview");
+        var mpPattern= document.getElementById("mpPattern");
+        var mpOrn    = document.getElementById("mpOrn");
+        var previewBtn = document.getElementById("previewBtn");
+        if (!fontSel || !preview) return;
+
+        function patternURI(emoji) {
+            if (!emoji) return "none";
+            var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='104' height='104'>" +
+                "<text x='52' y='66' font-size='38' text-anchor='middle'>" + emoji + "</text></svg>";
+            return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+        }
+
+        // Render the mini preview instantly from the current control values.
+        function render() {
+            var stack = FONTS[fontSel.value] || "serif";
+            var color = colorIn.value, text = textIn.value, bg = bgIn.value;
+            var useGrad = gradChk.checked;
+            var bg2 = useGrad ? bg2In.value : "";
+            var emoji = emojiIn.value;
+            var patop = parseInt(patIn.value, 10) || 0;
+
+            bg2In.disabled = !useGrad;
+            patVal.textContent = patop;
+
+            preview.style.setProperty("--mp-font", stack);
+            preview.style.setProperty("--mp-color", color);
+            preview.style.setProperty("--mp-text", text);
+            preview.style.setProperty("--mp-bg", bg);
+            preview.style.setProperty("--mp-bg2", bg2 || ("color-mix(in srgb, " + bg + " 60%, #fff)"));
+            mpOrn.textContent = emoji || "❦";              // ❦ default ornament
+            mpPattern.style.backgroundImage = (emoji && patop > 0) ? patternURI(emoji) : "none";
+            mpPattern.style.opacity = (patop / 100).toFixed(2);
+
+            if (previewBtn) {
+                previewBtn.href = "/invite_preview?template=" + encodeURIComponent(tmplIn.value) +
+                    "&font="  + encodeURIComponent(fontSel.value) +
+                    "&color=" + encodeURIComponent(color) +
+                    "&text="  + encodeURIComponent(text) +
+                    "&bg="    + encodeURIComponent(bg) +
+                    "&bg2="   + encodeURIComponent(bg2) +
+                    "&emoji=" + encodeURIComponent(emoji) +
+                    "&pattern=" + encodeURIComponent(patop);
+            }
+        }
+
+        // Preset chips fill EVERY control at once; the user can still tweak afterwards.
+        document.querySelectorAll(".preset-chip").forEach(function (chip) {
+            chip.addEventListener("click", function () {
+                var p = PRESETS[chip.dataset.preset];
+                if (!p) return;
+                tmplIn.value = chip.dataset.preset;
+                fontSel.value = p.font;
+                colorIn.value = p.color;
+                textIn.value  = p.text;
+                bgIn.value    = p.bg;
+                gradChk.checked = !!p.bg2;
+                bg2In.value   = p.bg2 || p.bg;
+                emojiIn.value = p.emoji || "";
+                patIn.value   = p.pattern || 0;
+                syncEmojiChips();
+                document.querySelectorAll(".preset-chip").forEach(function (c) { c.classList.remove("active"); });
+                chip.classList.add("active");
+                render();
+            });
+        });
+
+        // Emoji palette
+        function syncEmojiChips() {
+            document.querySelectorAll(".emoji-chip").forEach(function (c) {
+                c.classList.toggle("active", (c.dataset.emoji || "") === emojiIn.value);
+            });
+        }
+        document.querySelectorAll(".emoji-chip").forEach(function (chip) {
+            chip.addEventListener("click", function () {
+                emojiIn.value = chip.dataset.emoji || "";
+                syncEmojiChips();
+                render();
+            });
+        });
+
+        [fontSel, colorIn, textIn, bgIn, bg2In, gradChk, patIn].forEach(function (el) {
+            el.addEventListener("input", render);
+            el.addEventListener("change", render);
+        });
+
+        // Highlight the chip matching the saved template on load.
+        var cur = document.querySelector('.preset-chip[data-preset="' + tmplIn.value + '"]');
+        if (cur) cur.classList.add("active");
+        syncEmojiChips();
+        render();
+    })();
+</script>
+{% endblock %}

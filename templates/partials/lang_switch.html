@@ -1,0 +1,3 @@
+<div class="langs">
+  {% for l in available_langs %}<a href="/set_lang/{{ l }}" class="lang{{ ' on' if l == lang }}" title="{{ l }}" aria-label="{{ l }}">{{ {'el':'🇬🇷','en':'🇬🇧'}.get(l, l) }}</a>{% endfor %}
+</div>

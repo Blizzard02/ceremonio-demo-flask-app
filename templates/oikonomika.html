@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}{{ t('budget.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('budget.title') }}</h1>
+
+<!-- Summary stats -->
+<div class="stat-grid reveal">
+    <div class="stat"><b>{{ "%.2f"|format(synoliko_budget) }} €</b><span>{{ t('budget.total_budget') }}</span></div>
+    <div class="stat"><b>{{ "%.2f"|format(synoliko_ektimomeno) }} €</b><span>{{ t('budget.estimated_cost') }}</span></div>
+    <div class="stat"><b>{{ "%.2f"|format(synoliko_teliko) }} €</b><span>{{ t('budget.final_cost') }}</span></div>
+    <div class="stat"><b style="color:var(--ok)">{{ "%.2f"|format(synoliko_plirothike) }} €</b><span>{{ t('budget.paid_amount') }}</span></div>
+</div>
+
+<div class="stat-grid reveal" style="grid-template-columns:1fr 1fr;">
+    <div class="stat">
+        <b style="color:var(--bad)">{{ "%.2f"|format(synoliko_ypoloipo) }} €</b>
+        <span>{{ t('budget.remaining_debt') }}</span>
+    </div>
+    <div class="stat">
+        <b class="{{ 'positive' if diafora_budget >= 0 else 'negative' }}"
+           style="color:{{ 'var(--ok)' if diafora_budget >= 0 else 'var(--bad)' }}">
+            {{ "%.2f"|format(diafora_budget) }} €
+        </b>
+        <span>{% if diafora_budget >= 0 %}{{ t('budget.budget_remaining') }}{% else %}{{ t('budget.budget_overrun') }}{% endif %}</span>
+    </div>
+</div>
+
+<!-- Set budget form -->
+<div class="card reveal">
+    <h3>🎯 {{ t('budget.set_budget_title') }}</h3>
+    <form action="/update_budget" method="POST">
+        <label>{{ t('budget.set_budget_label') }}</label>
+        <input type="number" step="0.01" name="synoliko_budget" value="{{ synoliko_budget }}">
+        <button type="submit">💾 {{ t('budget.save_budget_btn') }}</button>
+    </form>
+</div>
+
+<!-- Add expense form -->
+<div class="card reveal">
+    <h3>➕ {{ t('budget.new_expense_title') }}</h3>
+    <form action="/add_exodo" method="POST">
+        <div class="grid-2">
+            <div>
+                <label>{{ t('budget.description') }}</label>
+                <input type="text" name="perigrafi" placeholder="{{ t('budget.description_ph') }}" required>
+            </div>
+            <div>
+                <label>{{ t('budget.category') }}</label>
+                <select name="katigoria" required>
+                    {% for k in katigories %}
+                        <option value="{{ k }}">{{ te(k) }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>{{ t('budget.supplier') }}</label>
+                <input type="text" name="promithiefthis" placeholder="{{ t('budget.supplier_ph') }}">
+            </div>
+            <div>
+                <label>{{ t('budget.est_cost') }}</label>
+                <input type="number" step="0.01" name="ektimomeno_kostos" value="0">
+            </div>
+            <div>
+                <label>{{ t('budget.final_cost') }}</label>
+                <input type="number" step="0.01" name="teliko_kostos" value="0">
+            </div>
+            <div>
+                <label>{{ t('budget.paid_field') }}</label>
+                <input type="number" step="0.01" name="plirothike" value="0">
+            </div>
+            <div>
+                <label>{{ t('budget.payment_date') }}</label>
+                <input type="date" name="imerominia_pliromis">
+            </div>
+            <div>
+                <label>{{ t('budget.notes') }}</label>
+                <textarea name="sxolia" placeholder="{{ t('budget.notes_ph') }}"></textarea>
+            </div>
+        </div>
+        <button type="submit">{{ t('budget.add_expense_btn') }}</button>
+    </form>
+</div>
+
+<!-- Expenses table -->
+<h2 class="reveal">📋 {{ t('budget.expenses_heading') }}</h2>
+
+{% if exoda %}
+    <div class="table-wrap reveal">
+        <table>
+            <thead>
+                <tr>
+                    <th>{{ t('budget.th_description') }}</th>
+                    <th>{{ t('budget.th_category') }}</th>
+                    <th>{{ t('budget.th_supplier') }}</th>
+                    <th>{{ t('budget.th_estimate') }}</th>
+                    <th>{{ t('budget.th_final') }}</th>
+                    <th>{{ t('budget.th_paid') }}</th>
+                    <th>{{ t('budget.th_balance') }}</th>
+                    <th>{{ t('budget.th_date') }}</th>
+                    <th>{{ t('budget.th_notes') }}</th>
+                    <th>{{ t('budget.th_status') }}</th>
+                    <th>{{ t('th.actions') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in exoda %}
+                    <tr>
+                        <td>{{ e.perigrafi }}</td>
+                        <td>{{ te(e.katigoria) }}</td>
+                        <td>{{ e.promithiefthis or "—" }}</td>
+                        <td>{{ "%.2f"|format(e.ektimomeno_kostos or 0) }} €</td>
+                        <td>{{ "%.2f"|format(e.teliko_kostos or 0) }} €</td>
+                        <td style="color:var(--ok); font-weight:600;">{{ "%.2f"|format(e.plirothike or 0) }} €</td>
+                        <td style="color:{{ 'var(--bad)' if e.ypoloipo() > 0 else 'var(--ok)' }}; font-weight:600;">
+                            {{ "%.2f"|format(e.ypoloipo()) }} €
+                        </td>
+                        <td>{{ e.imerominia_pliromis or "—" }}</td>
+                        <td>{{ e.sxolia or "—" }}</td>
+                        <td>
+                            {% if e.teliko_kostos == 0 %}
+                                <span class="status is-pending">{{ t('budget.status_no_final') }}</span>
+                            {% elif e.ypoloipo() <= 0 %}
+                                <span class="status is-coming">{{ t('budget.status_paid') }}</span>
+                            {% elif e.plirothike > 0 %}
+                                <span class="status is-pending">{{ t('budget.status_partial') }}</span>
+                            {% else %}
+                                <span class="status is-not">{{ t('budget.status_unpaid') }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/edit_exodo/{{ e.id }}"><button class="btn-warn btn-icon">✏️</button></a>
+                            <form action="/delete_exodo/{{ e.id }}" method="POST" onsubmit="return confirm(CONFIRM_EXPENSE)" style="display:inline;"><button type="submit" class="btn-danger btn-icon">🗑️</button></form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="empty reveal">{{ t('budget.empty') }}</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CONFIRM_EXPENSE = {{ t('budget.confirm_delete') | tojson }};
+</script>
+{% endblock %}

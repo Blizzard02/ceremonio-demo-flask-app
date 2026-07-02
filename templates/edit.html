@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ t('edit.guest_title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('edit.guest_title') }}</h1>
+
+<form method="POST" class="card reveal">
+    <div class="grid-2">
+        <div>
+            <label>{{ t('guest.fullname') }}</label>
+            <input type="text" name="onoma" value="{{ k.onoma }}" required>
+        </div>
+        <div>
+            <label>{{ t('guest.phone') }}</label>
+            <input type="text" name="tilefono" value="{{ k.tilefono or '' }}">
+        </div>
+    </div>
+
+    <label>{{ t('guest.email') }}</label>
+    <input type="email" name="email" value="{{ k.email or '' }}">
+
+    <label>{{ t('guest.gender') }}</label>
+    <select name="fylo">
+        <option value="Δεν ορίστηκε" {% if not k.fylo or k.fylo == 'Δεν ορίστηκε' %}selected{% endif %}>{{ te('Δεν ορίστηκε') }}</option>
+        <option value="Άνδρας" {% if k.fylo == 'Άνδρας' %}selected{% endif %}>{{ te('Άνδρας') }}</option>
+        <option value="Γυναίκα" {% if k.fylo == 'Γυναίκα' %}selected{% endif %}>{{ te('Γυναίκα') }}</option>
+    </select>
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="einai_paidi" id="einai_paidi" {% if k.einai_paidi %}checked{% endif %}>
+        <label for="einai_paidi">{{ t('guest.is_child') }}</label>
+    </div>
+
+    <div class="checkbox-row">
+        <input type="checkbox" name="prosklitirio_stalthike" id="prosklitirio_stalthike" {% if k.prosklitirio_stalthike %}checked{% endif %}>
+        <label for="prosklitirio_stalthike">{{ t('edit.invite_sent') }}</label>
+    </div>
+
+    <label>{{ t('th.rsvp') }}</label>
+    <select name="rsvp">
+        <option value="Δεν έχει απαντήσει" {% if k.rsvp == 'Δεν έχει απαντήσει' %}selected{% endif %}>{{ te('Δεν έχει απαντήσει') }}</option>
+        <option value="Έρχεται" {% if k.rsvp == 'Έρχεται' %}selected{% endif %}>{{ te('Έρχεται') }}</option>
+        <option value="Δεν έρχεται" {% if k.rsvp == 'Δεν έρχεται' %}selected{% endif %}>{{ te('Δεν έρχεται') }}</option>
+    </select>
+
+    <label>{{ t('th.diet') }}</label>
+    <select name="diatrofi">
+        {% for d in diatrofi_options %}
+            <option value="{{ d }}" {% if d == k.diatrofi %}selected{% endif %}>{{ te(d) }}</option>
+        {% endfor %}
+    </select>
+
+    <label>{{ t('edit.diet_notes') }}</label>
+    <textarea name="diatrofi_sxolia" placeholder="{{ t('edit.diet_notes_ph') }}">{{ k.diatrofi_sxolia or '' }}</textarea>
+
+    <label>{{ t('edit.invite_link') }}</label>
+    <div id="inviteLink" style="background:var(--violet-soft); border:1px solid #ddd6fe; border-radius:var(--r-sm); padding:12px; margin-bottom:10px; font-size:.87rem; word-break:break-all; color:var(--violet);">{{ request.host_url.rstrip('/') }}/invite/{{ k.invitation_token }}</div>
+    <button type="button" class="btn-warn btn-sm" style="margin-bottom:16px;" onclick="copyInviteLink()">{{ t('edit.copy_link') }}</button>
+
+    <label>{{ t('guest.companions') }}</label>
+    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+        <button type="button" class="btn-step" onclick="changePlusOne(-1)">−</button>
+        <input type="number" name="plus_one" id="plus_one" value="{{ k.plus_one }}" min="0" max="10" style="width:70px; text-align:center; margin:0;">
+        <button type="button" class="btn-step" onclick="changePlusOne(1)">+</button>
+    </div>
+
+    <label>{{ t('guest.group') }}</label>
+    <select name="omada_id">
+        {% for o in omades %}
+            <option value="{{ o.id }}" {% if o.id == k.omada_id %}selected{% endif %}>
+                {{ o.onoma }} ({{ t('side.bride_label') if o.pleura == "nyfis" else t('side.groom_label') }})
+            </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit" class="btn-block">{{ t('edit.save') }}</button>
+</form>
+
+<p style="text-align:center;"><a href="/">← {{ t('edit.back') }}</a></p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const LINK_COPIED_MSG = {{ t('edit.link_copied') | tojson }};
+
+    function copyInviteLink() {
+        const text = document.getElementById("inviteLink").innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert(LINK_COPIED_MSG);
+        }).catch(() => {
+            prompt(LINK_COPIED_MSG, text);
+        });
+    }
+
+    function changePlusOne(val) {
+        const input = document.getElementById("plus_one");
+        const current = parseInt(input.value) || 0;
+        input.value = Math.max(0, current + val);
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,595 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav.party') }} · Ceremonio{% endblock %}
+
+{% block head %}
+<style>
+    .main-layout {
+        display: grid;
+        grid-template-columns: 220px 1fr 260px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .tool-item {
+        background: #f5f3ff;
+        border: 1px solid #ddd6fe;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: grab;
+        text-align: center;
+        font-weight: bold;
+        color: #4c1d95;
+        user-select: none;
+    }
+
+    .tool-item:active {
+        cursor: grabbing;
+    }
+
+    #canvas {
+        position: relative;
+        height: 700px;
+        background:
+            linear-gradient(90deg, #f3f4f6 1px, transparent 1px),
+            linear-gradient(#f3f4f6 1px, transparent 1px);
+        background-size: 25px 25px;
+        border: 2px dashed #c4b5fd;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .canvas-title {
+        margin-bottom: 10px;
+        color: #6b21a8;
+        font-weight: bold;
+    }
+
+    .object {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        cursor: move;
+        user-select: none;
+        box-sizing: border-box;
+        border: 2px solid #6d28d9;
+        background: #ede9fe;
+        color: #3b0764;
+        font-weight: bold;
+        font-size: 13px;
+        padding: 5px;
+    }
+
+    .rotonta {
+        width: 95px;
+        height: 95px;
+        border-radius: 50%;
+        background: #fce7f3;
+        border-color: #db2777;
+    }
+
+    .orthogonio {
+        width: 140px;
+        height: 80px;
+        border-radius: 10px;
+        background: #ede9fe;
+        border-color: #7c3aed;
+    }
+
+    .pista {
+        width: 180px;
+        height: 120px;
+        border-radius: 18px;
+        background: #fef3c7;
+        border-color: #f59e0b;
+    }
+
+    .dj {
+        width: 150px;
+        height: 70px;
+        border-radius: 10px;
+        background: #e0f2fe;
+        border-color: #0284c7;
+    }
+
+    .mpoufes {
+        width: 160px;
+        height: 70px;
+        border-radius: 10px;
+        background: #dcfce7;
+        border-color: #16a34a;
+    }
+
+    .pisina {
+        width: 170px;
+        height: 100px;
+        border-radius: 40px;
+        background: #cffafe;
+        border-color: #0891b2;
+    }
+
+    .table-count {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: #ef4444;
+        color: white;
+        border-radius: 999px;
+        min-width: 25px;
+        height: 25px;
+        line-height: 25px;
+        font-size: 12px;
+        border: 2px solid white;
+    }
+
+    .delete-object, .edit-object {
+        position: absolute;
+        bottom: -10px;
+        color: white;
+        border-radius: 999px;
+        width: 24px;
+        height: 24px;
+        line-height: 22px;
+        font-size: 14px;
+        cursor: pointer;
+        border: 2px solid white;
+    }
+
+    .delete-object {
+        right: -10px;
+        background: #111827;
+    }
+
+    .edit-object {
+        left: -10px;
+        background: #f59e0b;
+    }
+
+    .guest {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px;
+        margin-bottom: 8px;
+        cursor: grab;
+        font-size: 13px;
+    }
+
+    .guest.assigned {
+        background: #dcfce7;
+        border-color: #86efac;
+    }
+
+    .guest small {
+        display: block;
+        color: #6b7280;
+        margin-top: 3px;
+    }
+
+    .buttons {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .glenti-btn {
+        background-color: #7c3aed;
+        color: white;
+        padding: 10px 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    .glenti-btn:hover {
+        background-color: #6d28d9;
+    }
+
+    .glenti-btn.danger {
+        background: #ef4444;
+    }
+
+    .glenti-btn.danger:hover {
+        background: #dc2626;
+    }
+
+    .hint {
+        color: #6b7280;
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .save-message {
+        margin-top: 10px;
+        color: #166534;
+        font-weight: bold;
+        display: none;
+    }
+
+    @media(max-width: 1000px) {
+        .main-layout {
+            grid-template-columns: 1fr;
+        }
+
+        #canvas {
+            height: 600px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>🎉 Διαχείριση Γλεντιού</h1>
+
+<div class="main-layout">
+
+    <div class="panel">
+        <h3>🧱 Αντικείμενα</h3>
+        <p class="hint">Σύρε αντικείμενα μέσα στον χώρο.</p>
+
+        <div class="tool-item" draggable="true" data-type="rotonta">⚪ Ροτόντα</div>
+        <div class="tool-item" draggable="true" data-type="orthogonio">▭ Ορθογώνιο Τραπέζι</div>
+        <div class="tool-item" draggable="true" data-type="pista">💃 Πίστα Χορού</div>
+        <div class="tool-item" draggable="true" data-type="dj">🎧 DJ / Ορχήστρα</div>
+        <div class="tool-item" draggable="true" data-type="mpoufes">🍽️ Μπουφές</div>
+        <div class="tool-item" draggable="true" data-type="pisina">🏊 Πισίνα</div>
+
+        <div class="buttons">
+            <button class="glenti-btn" onclick="saveState()">💾 Αποθήκευση Διάταξης</button>
+            <button class="glenti-btn danger" onclick="clearAll()">🗑️ Καθαρισμός</button>
+        </div>
+
+        <div id="saveMessage" class="save-message">
+            Αποθηκεύτηκε!
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="canvas-title">Κάτοψη Κέντρου Διασκέδασης</div>
+        <div id="canvas"></div>
+    </div>
+
+    <div class="panel">
+        <h3>👥 Καλεσμένοι</h3>
+        <p class="hint">
+            Σύρε έναν καλεσμένο πάνω σε τραπέζι.
+            Αν έχει συνοδούς, μετράει ως περισσότερα άτομα.
+        </p>
+
+        <div id="guestList"></div>
+
+        <div class="buttons">
+            <button class="glenti-btn" onclick="saveState()">💾 Αποθήκευση Θέσεων</button>
+            <button class="glenti-btn danger" onclick="clearAssignments()">↩️ Καθαρισμός Θέσεων</button>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let objects = {{ objects | tojson }};
+    let assignments = {{ assignments | tojson }};
+    let guests = {{ guests | tojson }};
+
+    const canvas = document.getElementById("canvas");
+    const guestList = document.getElementById("guestList");
+
+    let draggingObjectId = null;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const labels = {
+        rotonta: "Ροτόντα",
+        orthogonio: "Τραπέζι",
+        pista: "Πίστα",
+        dj: "DJ / Ορχήστρα",
+        mpoufes: "Μπουφές",
+        pisina: "Πισίνα"
+    };
+
+    function isTable(type) {
+        return type === "rotonta" || type === "orthogonio";
+    }
+
+    function getNextObjectLabel(type) {
+        if (type === "rotonta") {
+            const count = objects.filter(o => o.type === "rotonta").length + 1;
+            return `Ροτόντα ${count}`;
+        }
+
+        if (type === "orthogonio") {
+            const count = objects.filter(o => o.type === "orthogonio").length + 1;
+            return `Τραπέζι ${count}`;
+        }
+
+        return labels[type];
+    }
+
+    function getGuestTotalForObject(objectId) {
+        let total = 0;
+
+        for (const guestId in assignments) {
+            if (assignments[guestId] === objectId) {
+                const g = guests.find(x => String(x.id) === String(guestId));
+                if (g) {
+                    total += g.synolo;
+                }
+            }
+        }
+
+        return total;
+    }
+
+    function renderObjects() {
+        canvas.innerHTML = "";
+
+        objects.forEach(obj => {
+            const div = document.createElement("div");
+            div.className = `object ${obj.type}`;
+            div.style.left = obj.x + "px";
+            div.style.top = obj.y + "px";
+            div.dataset.id = obj.id;
+
+            let html = `<div>${obj.label}</div>`;
+
+            if (isTable(obj.type)) {
+                const count = getGuestTotalForObject(obj.id);
+                html += `<div class="table-count">${count}</div>`;
+            }
+
+            html += `<div class="edit-object" title="Αλλαγή ονόματος" onclick="editObjectLabel('${obj.id}', event)">✎</div>`;
+            html += `<div class="delete-object" title="Διαγραφή" onclick="deleteObject('${obj.id}', event)">×</div>`;
+
+            div.innerHTML = html;
+
+            div.addEventListener("mousedown", startMoveObject);
+
+            div.addEventListener("dragover", function(e) {
+                if (isTable(obj.type)) {
+                    e.preventDefault();
+                }
+            });
+
+            div.addEventListener("drop", function(e) {
+                e.preventDefault();
+
+                if (!isTable(obj.type)) {
+                    alert("Μπορείς να βάλεις καλεσμένους μόνο σε τραπέζια.");
+                    return;
+                }
+
+                const guestId = e.dataTransfer.getData("guest-id");
+
+                if (guestId) {
+                    assignments[guestId] = obj.id;
+                    renderObjects();
+                    renderGuests();
+                }
+            });
+
+            canvas.appendChild(div);
+        });
+    }
+
+    function renderGuests() {
+        guestList.innerHTML = "";
+
+        guests.forEach(g => {
+            const div = document.createElement("div");
+
+            const assignedObjectId = assignments[String(g.id)];
+            const assignedObject = objects.find(o => o.id === assignedObjectId);
+
+            div.className = "guest" + (assignedObject ? " assigned" : "");
+            div.draggable = true;
+
+            div.innerHTML = `
+                <strong>${g.onoma}</strong>
+                <small>Ομάδα: ${g.omada || "—"}</small>
+                <small>Φύλο: ${g.fylo || "Δεν ορίστηκε"} ${g.einai_paidi ? " | Παιδί" : ""}</small>
+                <small>Άτομα: ${g.synolo} ${g.plus_one > 0 ? "(+" + g.plus_one + ")" : ""}</small>
+                <small>${assignedObject ? "Σε: " + assignedObject.label : "Δεν έχει τοποθετηθεί"}</small>
+            `;
+
+            div.addEventListener("dragstart", function(e) {
+                e.dataTransfer.setData("guest-id", g.id);
+            });
+
+            div.addEventListener("dblclick", function() {
+                delete assignments[String(g.id)];
+                renderObjects();
+                renderGuests();
+            });
+
+            guestList.appendChild(div);
+        });
+    }
+
+    document.querySelectorAll(".tool-item").forEach(item => {
+        item.addEventListener("dragstart", function(e) {
+            e.dataTransfer.setData("object-type", item.dataset.type);
+        });
+    });
+
+    canvas.addEventListener("dragover", function(e) {
+        e.preventDefault();
+    });
+
+    canvas.addEventListener("drop", function(e) {
+        e.preventDefault();
+
+        const type = e.dataTransfer.getData("object-type");
+
+        if (!type) {
+            return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+
+        const obj = {
+            id: "obj_" + Date.now(),
+            type: type,
+            label: getNextObjectLabel(type),
+            x: e.clientX - rect.left - 50,
+            y: e.clientY - rect.top - 40
+        };
+
+        objects.push(obj);
+        renderObjects();
+    });
+
+    function startMoveObject(e) {
+        if (e.target.classList.contains("delete-object") || e.target.classList.contains("edit-object")) {
+            return;
+        }
+
+        const id = e.currentTarget.dataset.id;
+        const obj = objects.find(o => o.id === id);
+
+        if (!obj) {
+            return;
+        }
+
+        draggingObjectId = id;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+
+        document.addEventListener("mousemove", moveObject);
+        document.addEventListener("mouseup", stopMoveObject);
+    }
+
+    function moveObject(e) {
+        if (!draggingObjectId) {
+            return;
+        }
+
+        const obj = objects.find(o => o.id === draggingObjectId);
+        const rect = canvas.getBoundingClientRect();
+
+        obj.x = e.clientX - rect.left - offsetX;
+        obj.y = e.clientY - rect.top - offsetY;
+
+        obj.x = Math.max(0, Math.min(obj.x, canvas.clientWidth - 80));
+        obj.y = Math.max(0, Math.min(obj.y, canvas.clientHeight - 80));
+
+        renderObjects();
+    }
+
+    function stopMoveObject() {
+        draggingObjectId = null;
+        document.removeEventListener("mousemove", moveObject);
+        document.removeEventListener("mouseup", stopMoveObject);
+    }
+
+    function editObjectLabel(id, event) {
+        event.stopPropagation();
+
+        const obj = objects.find(o => o.id === id);
+        if (!obj) {
+            return;
+        }
+
+        const newLabel = prompt("Νέο όνομα τραπεζιού / αντικειμένου:", obj.label);
+        if (newLabel === null) {
+            return;
+        }
+
+        const trimmed = newLabel.trim();
+        if (!trimmed) {
+            alert("Το όνομα δεν μπορεί να είναι κενό.");
+            return;
+        }
+
+        obj.label = trimmed;
+        renderObjects();
+        renderGuests();
+    }
+
+    function deleteObject(id, event) {
+        event.stopPropagation();
+
+        const obj = objects.find(o => o.id === id);
+
+        if (!obj) {
+            return;
+        }
+
+        const hasGuests = Object.values(assignments).includes(id);
+
+        if (hasGuests) {
+            alert("Δεν μπορείς να σβήσεις αυτό το τραπέζι γιατί έχει καλεσμένους. Πρώτα αφαίρεσέ τους με διπλό κλικ από τη λίστα καλεσμένων.");
+            return;
+        }
+
+        if (!confirm("Να διαγραφεί το αντικείμενο;")) {
+            return;
+        }
+
+        objects = objects.filter(o => o.id !== id);
+        renderObjects();
+        renderGuests();
+    }
+
+    function clearAssignments() {
+        if (!confirm("Να αφαιρεθούν όλοι οι καλεσμένοι από τα τραπέζια;")) {
+            return;
+        }
+
+        assignments = {};
+        renderObjects();
+        renderGuests();
+    }
+
+    function clearAll() {
+        if (!confirm("Να καθαρίσει όλη η διάταξη του γλεντιού;")) {
+            return;
+        }
+
+        objects = [];
+        assignments = {};
+        renderObjects();
+        renderGuests();
+    }
+
+    function saveState() {
+        fetch("/save_glenti", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                objects: objects,
+                assignments: assignments
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            const msg = document.getElementById("saveMessage");
+            msg.style.display = "block";
+
+            setTimeout(() => {
+                msg.style.display = "none";
+            }, 2000);
+        });
+    }
+
+    renderObjects();
+    renderGuests();
+</script>
+{% endblock %}

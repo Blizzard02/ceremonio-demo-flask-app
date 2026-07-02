@@ -1,0 +1,97 @@
+<style>
+  body::before, body::after { content: ""; position: fixed; z-index: 10000; transition: opacity .4s ease; }
+  body::before {
+    inset: 0;
+    background: #fdf2f8 url("{{ url_for('static', filename='icons/icon-512.png') }}") no-repeat center calc(50% - 30px);
+    background-size: 110px 110px;
+  }
+  body::after {
+    width: 34px; height: 34px; left: calc(50% - 17px); top: calc(50% + 55px);
+    border: 4px solid #ede9fe; border-top-color: #7c3aed; border-radius: 50%;
+    animation: glenti-spin .8s linear infinite;
+  }
+  @keyframes glenti-spin { to { transform: rotate(360deg); } }
+  html.glenti-loaded body::before, html.glenti-loaded body::after { opacity: 0; visibility: hidden; }
+</style>
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<meta name="theme-color" content="#7c3aed">
+<meta name="description" content="{{ t('meta.description') }}">
+<meta property="og:title" content="Ceremonio">
+<meta property="og:description" content="{{ t('meta.description') }}">
+<meta property="og:type" content="website">
+<meta property="og:image" content="{{ url_for('static', filename='icons/icon-512.png', _external=True) }}">
+<meta name="twitter:card" content="summary">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ceremonio">
+<link rel="stylesheet" href="{{ url_for('static', filename='mobile.css') }}">
+<script>
+  window.GLENTI_I18N = { lang: "{{ lang }}", langs: {{ available_langs | tojson }}, installHelp: {{ t('install.help') | tojson }} };
+  (function () {
+    document.documentElement.lang = (window.GLENTI_I18N && window.GLENTI_I18N.lang) || "el";
+
+    // Mark the page when running as the installed (standalone) app so we can hide
+    // install/download affordances — the user already has it.
+    if ((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+        window.navigator.standalone === true) {
+      document.documentElement.classList.add("standalone");
+    }
+
+    // Capture the PWA install prompt so the brand block / download page can offer it.
+    // Stored on window so any page (e.g. /download) can reach it.
+    window.__ceremioPrompt = window.__ceremioPrompt || null;
+    window.addEventListener("beforeinstallprompt", function (e) {
+      e.preventDefault();
+      window.__ceremioPrompt = e;
+      window.dispatchEvent(new Event("ceremio:installable"));
+    });
+    window.addEventListener("appinstalled", function () {
+      window.__ceremioPrompt = null;
+      window.dispatchEvent(new Event("ceremio:installed"));
+    });
+
+    // Reusable installer: native prompt if available, otherwise the /download guide.
+    window.ceremioInstall = function () {
+      if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return false;
+      if (window.__ceremioPrompt) {
+        window.__ceremioPrompt.prompt();
+        window.__ceremioPrompt.userChoice.then(function () { window.__ceremioPrompt = null; });
+        return true;
+      }
+      return false;
+    };
+
+    document.addEventListener("click", function (e) {
+      // Brand block (logo + Ceremonio + DOWNLOAD) installs the app.
+      if (e.target.closest("#brandInstall")) {
+        if (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) return;
+        e.preventDefault();
+        if (!window.ceremioInstall()) {
+          // No native prompt on this browser (e.g. iPhone) → open the install guide.
+          window.location.href = "/download";
+        }
+        return;
+      }
+
+      // Mobile hamburger menu toggle (the language flags are server-rendered in the bar).
+      var nav = document.getElementById("mainnav");
+      if (!nav) return;
+      if (e.target.closest(".navtoggle")) {
+        var open = nav.classList.toggle("open");
+        var btn = e.target.closest(".navtoggle");
+        if (btn) btn.setAttribute("aria-expanded", open ? "true" : "false");
+      } else if (!e.target.closest("#mainnav")) {
+        nav.classList.remove("open");
+      }
+    });
+
+    window.addEventListener("load", function () {
+      document.documentElement.classList.add("glenti-loaded");
+      if ("serviceWorker" in navigator) navigator.serviceWorker.register("/service-worker.js");
+    });
+    // Safety fallback: never trap the user behind the splash if `load` is delayed.
+    setTimeout(function () { document.documentElement.classList.add("glenti-loaded"); }, 4000);
+  })();
+</script>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ t('backup.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('backup.title') }}</h1>
+
+<div class="card reveal">
+    <h2>{{ t('backup.export_title') }}</h2>
+    <p class="hint">{{ t('backup.export_hint') }}</p>
+    <a class="btn" href="/export_data">{{ t('backup.export_btn') }}</a>
+</div>
+
+<div class="card reveal" style="border-left:5px solid var(--bad);">
+    <h2>{{ t('backup.import_title') }}</h2>
+    <p class="hint"><strong>{{ t('backup.import_hint') }}</strong></p>
+    <form action="/import_data" method="POST" enctype="multipart/form-data" onsubmit="return confirm(IMPORT_CONFIRM)">
+        <label>{{ t('backup.import_file_label') }}</label>
+        <input type="file" name="backup_file" accept="application/json,.json" required>
+        <button type="submit">{{ t('backup.import_btn') }}</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const IMPORT_CONFIRM = {{ t('backup.import_confirm') | tojson }};
+</script>
+{% endblock %}

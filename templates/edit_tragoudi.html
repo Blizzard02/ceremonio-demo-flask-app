@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ t('edit.song_title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('edit.song_title') }}</h1>
+
+<form method="POST" class="card reveal">
+    <div class="grid-2">
+        <div>
+            <label>{{ t('edit.song_name') }}</label>
+            <input type="text" name="titlos" value="{{ tragoudi.titlos }}" required>
+        </div>
+        <div>
+            <label>{{ t('edit.artist') }}</label>
+            <input type="text" name="kallitechnis" value="{{ tragoudi.kallitechnis or '' }}">
+        </div>
+    </div>
+
+    <label>{{ t('edit.song_category') }}</label>
+    <select name="katigoria" required>
+        {% for kat in katigories_mousikis %}
+            <option value="{{ kat }}" {% if kat == tragoudi.katigoria %}selected{% endif %}>{{ te(kat) }}</option>
+        {% endfor %}
+    </select>
+
+    <label>{{ t('edit.song_link') }}</label>
+    <input type="url" name="link" value="{{ tragoudi.link or '' }}">
+
+    <label>{{ t('edit.notes') }}</label>
+    <textarea name="sxolia">{{ tragoudi.sxolia or '' }}</textarea>
+
+    <button type="submit" class="btn-block">{{ t('edit.save') }}</button>
+</form>
+
+<p style="text-align:center;"><a href="/playlist">← {{ t('edit.song_back') }}</a></p>
+{% endblock %}

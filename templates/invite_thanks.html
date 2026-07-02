@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t('invite_thanks.page_title') }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(180deg, #fdf2f8, #f5f3ff); padding:20px; max-width:650px; margin:0 auto; color:#374151; }
+        .card { background:white; border-radius:18px; padding:30px; box-shadow:0 10px 30px rgba(124,58,237,0.12); margin-top:50px; text-align:center; }
+        h1 { color:#7c3aed; }
+        .status { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:12px; padding:14px; margin-top:20px; }
+    </style>
+
+    {% include 'partials/pwa_head.html' %}
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="no-referrer">
+</head>
+<body>
+    <div class="card">
+        <h1>{{ t('invite_thanks.heading', name=k.onoma) }}</h1>
+        <p>{{ t('invite_thanks.body') }}</p>
+        <div class="status">
+            <p><strong>{{ t('invite_thanks.rsvp_label') }}</strong> {{ te(k.rsvp) }}</p>
+            <p><strong>{{ t('invite_thanks.diet_label') }}</strong> {{ te(k.diatrofi) or t('invite_thanks.diet_no_answer') }}</p>
+        </div>
+        <p>{{ t('invite_thanks.reopen_hint') }}</p>
+    </div>
+    <footer style="text-align:center; margin-top:18px; font-size:13px; color:#6b7280;">© {{ year }} Ceremonio · <a href="/privacy" style="color:inherit; text-decoration:underline;">{{ t('invite.privacy') }}</a></footer>
+</body>
+</html>

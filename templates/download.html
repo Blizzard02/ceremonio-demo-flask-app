@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ t('download.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<div class="auth dl">
+    <a href="/" class="auth-home">← {{ t('auth.back_home') }}</a>
+    <div class="auth-logo reveal">{% include 'partials/logo.html' %}</div>
+    <h1 class="reveal">{{ t('download.title') }}</h1>
+    <p class="auth-tagline reveal">{{ t('download.subtitle') }}</p>
+
+    <!-- already installed -->
+    <div class="card reveal" id="dlDone" hidden style="border-color:var(--violet-soft); background:var(--violet-soft);">
+        <p style="margin:0; font-weight:600;">✅ {{ t('download.already') }}</p>
+    </div>
+
+    <!-- the Download button — always visible; works on Android & desktop, reopens in Chrome from in-app browsers -->
+    <div class="card reveal" id="dlAction">
+        <button type="button" class="btn-block btn-lg" id="dlInstallBtn">⬇ {{ t('download.btn_install') }}</button>
+        <p class="hint" id="dlActionHint" style="margin:10px 0 0; text-align:center;">{{ t('download.action_hint') }}</p>
+        <!-- concise, one-line per-platform fallbacks (shown only when a tap can't open a prompt) -->
+        <p class="hint dl-line" id="dlLineIos" hidden>{{ t('download.ios_line') }}</p>
+        <p class="hint dl-line" id="dlLineAndroid" hidden>{{ t('download.android_line') }}</p>
+        <p class="hint dl-line" id="dlLineDesktop" hidden>{{ t('download.desktop_line') }}</p>
+    </div>
+
+    <!-- share with a friend -->
+    <div class="card reveal">
+        <p class="hint" style="margin-top:0;">{{ t('download.share_hint') }}</p>
+        <button type="button" class="btn-warn btn-block" id="dlShareBtn"
+                data-copied="{{ t('download.copied') }}" data-label="🔗 {{ t('download.share_btn') }}">🔗 {{ t('download.share_btn') }}</button>
+    </div>
+
+    <ul class="dl-benefits reveal">
+        <li>⚡ {{ t('download.b1') }}</li>
+        <li>📶 {{ t('download.b2') }}</li>
+        <li>🏠 {{ t('download.b3') }}</li>
+    </ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var ua = navigator.userAgent || "";
+    var isIOS = /iphone|ipad|ipod/i.test(ua) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var isAndroid = /android/i.test(ua);
+    var standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+                     window.navigator.standalone === true;
+
+    var btn = document.getElementById("dlInstallBtn");
+    var hint = document.getElementById("dlActionHint");
+    var labelInstall = btn ? btn.textContent : "";
+    var WAITING = {{ t('download.waiting') | tojson }};
+
+    function show(id) { var el = document.getElementById(id); if (el) el.hidden = false; }
+    function hide(id) { var el = document.getElementById(id); if (el) el.hidden = true; }
+    function line(id) { hide("dlActionHint"); show(id); }
+
+    if (standalone) { hide("dlAction"); show("dlDone"); return; }
+
+    // iPhone/iPad: Apple offers no install button or prompt — one short line is the only way.
+    if (isIOS) { line("dlLineIos"); }
+
+    window.addEventListener("ceremio:installed", function () { hide("dlAction"); show("dlDone"); });
+
+    // Reopen the link in Chrome (Android in-app browsers like Instagram/Messenger can't install).
+    function openInChrome() {
+        var host = location.host + location.pathname;
+        window.location.href = "intent://" + host + "#Intent;scheme=https;package=com.android.chrome;end";
+    }
+
+    if (btn) btn.addEventListener("click", function () {
+        if (window.ceremioInstall()) return;     // native browser prompt — done
+        if (isIOS) { line("dlLineIos"); return; }
+
+        // Prompt not ready yet — wait briefly for the browser to offer it.
+        btn.disabled = true;
+        hint.textContent = WAITING;
+        var tries = 0;
+        var iv = setInterval(function () {
+            tries++;
+            if (window.__ceremioPrompt) {
+                clearInterval(iv);
+                btn.disabled = false; btn.textContent = labelInstall;
+                window.ceremioInstall();
+            } else if (tries >= 10) {              // ~2.5s
+                clearInterval(iv);
+                btn.disabled = false; btn.textContent = labelInstall;
+                if (isAndroid) { openInChrome(); }  // seamless → Chrome, where install works
+                else { line("dlLineDesktop"); }     // desktop Firefox/Safari: one short line
+            }
+        }, 250);
+    });
+
+    // Share / copy the install link.
+    var share = document.getElementById("dlShareBtn");
+    if (share) share.addEventListener("click", function () {
+        var url = location.origin + "/download";
+        if (navigator.share) { navigator.share({ title: "Ceremonio", url: url }).catch(function () {}); return; }
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function () {
+                share.textContent = "✓ " + share.getAttribute("data-copied");
+                setTimeout(function () { share.textContent = share.getAttribute("data-label"); }, 1800);
+            });
+        }
+    });
+})();
+</script>
+{% endblock %}

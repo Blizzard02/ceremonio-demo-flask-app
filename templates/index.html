@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}{{ t('guests.title') }} · Ceremonio{% endblock %}
+
+{% block content %}
+<h1 class="reveal">{{ t('guests.title') }}</h1>
+
+<!-- Totals -->
+<div class="stat-grid reveal">
+    <div class="stat"><b>{{ synolo_eggrafes }}</b><span>{{ t('stats.records') }}</span></div>
+    <div class="stat"><b>{{ synolo_atoma }}</b><span>{{ t('stats.total_people') }}</span></div>
+    <div class="stat"><b>{{ synolo_paidia }}</b><span>{{ t('stats.children') }}</span></div>
+    <div class="stat"><b>{{ prosklitiria }}</b><span>{{ t('stats.invites') }}</span></div>
+</div>
+
+<div class="card reveal">
+    <label for="guestSearch">{{ t('guests.search_label') }}</label>
+    <input type="text" id="guestSearch" placeholder="{{ t('guests.search_ph') }}" onkeyup="filterGuests()" style="margin-bottom:0;">
+</div>
+
+<div class="grid-2 reveal">
+    <!-- New group -->
+    <form action="/add_omada" method="POST" class="card" style="margin:0;">
+        <h3>{{ t('group.new_title') }}</h3>
+        <label>{{ t('group.name') }}</label>
+        <input type="text" name="onoma" placeholder="{{ t('group.name_ph') }}" required>
+        <label>{{ t('group.side') }} <a href="/settings" class="label-hint">({{ t('group.side_hint') }})</a></label>
+        <select name="pleura">
+            <option value="nyfis">💗 {{ sides['nyfis'] }}</option>
+            <option value="gambrou">💜 {{ sides['gambrou'] }}</option>
+        </select>
+        <button type="submit" class="btn-block">{{ t('group.create_btn') }}</button>
+    </form>
+
+    <!-- New guest -->
+    <form action="/add_kalesmeno" method="POST" class="card" style="margin:0;">
+        <h3>{{ t('guest.new_title') }}</h3>
+        <label>{{ t('guest.fullname') }}</label>
+        <input type="text" name="onoma" placeholder="{{ t('guest.fullname_ph') }}" required>
+        <label>{{ t('guest.phone') }}</label>
+        <input type="text" name="tilefono" placeholder="{{ t('guest.phone_ph') }}">
+        <label>{{ t('guest.email') }}</label>
+        <input type="email" name="email" placeholder="{{ t('guest.email_ph') }}">
+        <label>{{ t('guest.gender') }}</label>
+        <select name="fylo">
+            <option value="Δεν ορίστηκε">{{ te('Δεν ορίστηκε') }}</option>
+            <option value="Άνδρας">{{ te('Άνδρας') }}</option>
+            <option value="Γυναίκα">{{ te('Γυναίκα') }}</option>
+        </select>
+        <div class="checkbox-row">
+            <input type="checkbox" name="einai_paidi" id="einai_paidi">
+            <label for="einai_paidi">{{ t('guest.is_child') }}</label>
+        </div>
+        <label>{{ t('guest.companions') }}</label>
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+            <button type="button" class="btn-step" onclick="changePlusOne(-1)">−</button>
+            <input type="number" name="plus_one" id="plus_one" value="0" min="0" max="10" style="width:70px; text-align:center; margin:0;">
+            <button type="button" class="btn-step" onclick="changePlusOne(1)">+</button>
+        </div>
+        <label>{{ t('guest.group') }}</label>
+        <select name="omada_id" required>
+            {% for o in omades %}
+                <option value="{{ o.id }}">{{ o.onoma }} ({{ sides[o.pleura] }})</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn-block">{{ t('guest.add_btn') }}</button>
+    </form>
+</div>
+
+<!-- Groups -->
+{% for o in omades %}
+    <section class="group side-{{ o.pleura }} reveal">
+        <div class="group-head">
+            <h2>{{ o.onoma }} — {{ '💗 ' ~ sides['nyfis'] if o.pleura == 'nyfis' else '💜 ' ~ sides['gambrou'] }}</h2>
+            <div class="group-actions">
+                <a href="/edit_omada/{{ o.id }}"><button class="btn-warn btn-sm">{{ t('group.edit') }}</button></a>
+                <form action="/delete_omada/{{ o.id }}" method="POST" onsubmit="return confirm(CONFIRM_GROUP)" style="display:inline;"><button type="submit" class="btn-danger btn-sm">{{ t('group.delete') }}</button></form>
+            </div>
+        </div>
+
+        <div class="chip">📋 {{ t('group.records') }}: <strong>{{ o.kalesmeni|length }}</strong> &nbsp;|&nbsp; 👥 {{ t('group.total_people') }}: <strong>{{ o.synolo_atoma() }}</strong></div>
+
+        {% if o.kalesmeni %}
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <th>{{ t('th.name') }}</th>
+                        <th>{{ t('th.phone') }}</th>
+                        <th>{{ t('th.email') }}</th>
+                        <th>{{ t('th.rsvp') }}</th>
+                        <th>{{ t('th.gender') }}</th>
+                        <th>{{ t('th.child') }}</th>
+                        <th>{{ t('th.invite') }}</th>
+                        <th>{{ t('th.diet') }}</th>
+                        <th>{{ t('th.companions') }}</th>
+                        <th>{{ t('th.rsvp_link') }}</th>
+                        <th>{{ t('th.actions') }}</th>
+                    </tr>
+                    {% for k in o.kalesmeni %}
+                        <tr class="guest-row" data-search="{{ (k.onoma ~ ' ' ~ (k.tilefono or '') ~ ' ' ~ (k.email or '') ~ ' ' ~ k.rsvp ~ ' ' ~ (k.fylo or '') ~ ' ' ~ (k.diatrofi or '') ~ ' ' ~ o.onoma)|lower }}">
+                            <td>{{ k.onoma }}</td>
+                            <td>{{ k.tilefono or "—" }}</td>
+                            <td>{{ k.email or "—" }}</td>
+                            <td>
+                                <span class="status {% if k.rsvp == 'Έρχεται' %}is-coming{% elif k.rsvp == 'Δεν έρχεται' %}is-not{% else %}is-pending{% endif %}">{{ te(k.rsvp) }}</span>
+                            </td>
+                            <td>{{ te(k.fylo or "Δεν ορίστηκε") }}</td>
+                            <td>{% if k.einai_paidi %}<span class="badge badge-child">{{ t('badge.child') }}</span>{% else %}—{% endif %}</td>
+                            <td>{% if k.prosklitirio_stalthike %}<span class="badge badge-invite">{{ t('common.yes') }}</span>{% else %}—{% endif %}</td>
+                            <td>{{ te(k.diatrofi or "Δεν απάντησε") }}</td>
+                            <td>{{ "+" + k.plus_one|string if k.plus_one > 0 else "—" }}</td>
+                            <td>
+                                <div class="invite-cell">
+                                    <div class="invite-link" id="invite-{{ k.id }}" title="{{ request.host_url.rstrip('/') }}/invite/{{ k.invitation_token }}">{{ request.host_url.rstrip('/') }}/invite/{{ k.invitation_token }}</div>
+                                    <div class="invite-actions">
+                                        <button type="button" class="btn-sm btn-copy" onclick="copyInviteLink('invite-{{ k.id }}')">{{ t('guests.copy') }}</button>
+                                        <form action="/toggle_prosklitirio/{{ k.id }}" method="POST" class="inline-form">
+                                            <label class="sent-check">
+                                                <input type="checkbox" name="prosklitirio_stalthike" onchange="this.form.submit()" {% if k.prosklitirio_stalthike %}checked{% endif %}>
+                                                {{ t('guests.sent') }}
+                                            </label>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="/edit_kalesmeno/{{ k.id }}"><button class="btn-warn btn-icon">✏️</button></a>
+                                <form action="/delete_kalesmeno/{{ k.id }}" method="POST" onsubmit="return confirm(CONFIRM_GUEST)" style="display:inline;"><button type="submit" class="btn-danger btn-icon">🗑️</button></form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        {% else %}
+            <p class="empty">{{ t('guests.empty_group') }}</p>
+        {% endif %}
+    </section>
+{% endfor %}
+
+{% if not omades %}
+    <p class="empty">{{ t('guests.empty_all') }}</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const CONFIRM_GROUP = {{ t('group.confirm_delete') | tojson }};
+    const CONFIRM_GUEST = {{ t('guest.confirm_delete') | tojson }};
+    const COPIED_MSG = {{ t('guests.link_copied') | tojson }};
+
+    function filterGuests() {
+        const q = document.getElementById("guestSearch").value.toLowerCase().trim();
+        document.querySelectorAll(".guest-row").forEach(row => {
+            const text = row.dataset.search || "";
+            row.style.display = text.includes(q) ? "" : "none";
+        });
+    }
+
+    function copyInviteLink(elementId) {
+        const text = document.getElementById(elementId).innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert(COPIED_MSG);
+        }).catch(() => {
+            prompt(COPIED_MSG, text);
+        });
+    }
+
+    function changePlusOne(val) {
+        const input = document.getElementById("plus_one");
+        const current = parseInt(input.value) || 0;
+        input.value = Math.max(0, current + val);
+    }
+</script>
+{% endblock %}
